@@ -72,13 +72,6 @@ SQL.Relation.prototype.redrawNormal = function(p1, p2, half) {
 		var str = "M "+p1[0]+" "+p1[1]+" C "+(p1[0] + half)+" "+p1[1]+" ";
 		str += (p2[0]-half)+" "+p2[1]+" "+p2[0]+" "+p2[1];
 		this.dom[0].setAttribute("d",str);
-		if (this.row1.owner.dom.container.className.indexOf('sub-selected') == -1 && this.row2.owner.dom.container.className.indexOf('sub-selected') == -1) {
-			if (this.row2.owner.selected || this.row1.owner.selected) {
-				this.dom[0].setAttribute("class", "with-selected");
-			} else {
-				this.dom[0].setAttribute("class", "");
-			}
-		}
 	} else {
 		this.dom[0].style.left = p1[0]+"px";
 		this.dom[0].style.top = p1[1]+"px";

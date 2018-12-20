@@ -111,6 +111,7 @@ SQL.Table.prototype.select = function(_isSibling) {
 		this.rows.forEach(function(row) {
 			if (row.relations && row.relations.length > 0) {
 				row.relations.forEach(function(relation) {
+					relation.dom[0].setAttribute("class", "with-selected");
 					relation.row1.owner.select(true)
 					relation.row2.owner.select(true)
 				});
@@ -125,6 +126,13 @@ SQL.Table.prototype.deselect = function() {
 	OZ.DOM.removeClass(this.dom.container, "selected");
 	OZ.DOM.removeClass(this.dom.container, "sub-selected");
 	OZ.DOM.removeClass(this.dom.mini, "mini_selected");
+	this.rows.forEach(function(row) {
+		if (row.relations && row.relations.length > 0) {
+			row.relations.forEach(function(relation) {
+				relation.dom[0].setAttribute("class", "");
+			});
+		}
+	});
 	this.redraw();
 }
 
