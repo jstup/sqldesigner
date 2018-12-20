@@ -28,7 +28,7 @@ body {
 #bar {
 	text-align: center;
 	background-color: #ccc;
-	position: fixed; 
+	position: fixed;
 	top: 0px;
 	right: 0px;
 	width: 150px;
@@ -120,6 +120,19 @@ body {
 
 .table.selected {
 	border: 2px solid #000;
+}
+
+.has-selection .table {
+	opacity: .5;
+}
+.has-selection .table.selected {
+	opacity: 1;
+}
+.has-selection path {
+	opacity: .2;
+}
+.has-selection path.with-selected {
+	opacity: 1;
 }
 
 .table thead .title {
@@ -248,7 +261,7 @@ body {
 }
 
 #keys {
-	white-space: nowrap; 
+	white-space: nowrap;
 	text-align: center;
 }
 

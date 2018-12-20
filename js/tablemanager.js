@@ -8,8 +8,9 @@ SQL.TableManager = function(owner) {
 		comment:OZ.$("tablecomment")
 	};
 	this.selection = [];
+	this.selectedSiblings = [];
 	this.adding = false;
-	
+
 	var ids = ["addtable","removetable","aligntables","cleartables","addrow","edittable","tablekeys"];
 	for (var i=0;i<ids.length;i++) {
 		var id = ids[i];
@@ -24,12 +25,12 @@ SQL.TableManager = function(owner) {
 		var elm = OZ.$(id);
 		elm.innerHTML = _(id);
 	}
-	
-	
+
+
 	this.select(false);
-	
+
 	this.save = this.save.bind(this);
-	
+
 	OZ.Event.add("area", "click", this.click.bind(this));
 	OZ.Event.add(this.dom.addtable, "click", this.preAdd.bind(this));
 	OZ.Event.add(this.dom.removetable, "click", this.remove.bind(this));
@@ -51,6 +52,7 @@ SQL.TableManager.prototype.addRow = function(e) {
 
 SQL.TableManager.prototype.select = function(table, multi) { /* activate table */
 	if (table) {
+		OZ.DOM.addClass("area","has-selection");
 		if (multi) {
 			var i = this.selection.indexOf(table);
 			if (i < 0) {
@@ -64,6 +66,7 @@ SQL.TableManager.prototype.select = function(table, multi) { /* activate table *
 		}
 	} else {
 		this.selection = [];
+		OZ.DOM.removeClass("area","has-selection");
 	}
 	this.processSelection();
 }
@@ -72,6 +75,7 @@ SQL.TableManager.prototype.processSelection = function() {
 	var tables = this.owner.tables;
 	for (var i=0;i<tables.length;i++) {
 		tables[i].deselect();
+		OZ.DOM.removeClass("area","has-selection");
 	}
 	if (this.selection.length == 1) {
 		this.dom.addrow.disabled = false;
@@ -89,6 +93,9 @@ SQL.TableManager.prototype.processSelection = function() {
 	} else {
 		this.dom.removetable.disabled = true;
 		this.dom.removetable.value = _("removetable");
+	}
+	if (this.selection.length > 0 ) {
+		OZ.DOM.addClass("area","has-selection");
 	}
 	for (var i=0;i<this.selection.length;i++) {
 		var t = this.selection[i];
@@ -165,7 +172,7 @@ SQL.TableManager.prototype.remove = function(e) {
 
 SQL.TableManager.prototype.edit = function(e) {
 	this.owner.window.open(_("edittable"), this.dom.container, this.save);
-	
+
 	var title = this.selection[0].getTitle();
 	this.dom.name.value = title;
 	try { /* throws in ie6 */
@@ -180,7 +187,7 @@ SQL.TableManager.prototype.edit = function(e) {
 		} catch(e) {}
 	} else {
 		this.dom.name.setSelectionRange(0, title.length);
-	} 
+	}
 }
 
 SQL.TableManager.prototype.keys = function(e) { /* open keys dialog */
@@ -195,7 +202,7 @@ SQL.TableManager.prototype.save = function() {
 SQL.TableManager.prototype.press = function(e) {
 	var target = OZ.Event.target(e).nodeName.toLowerCase();
 	if (target == "textarea" || target == "input") { return; } /* not when in form field */
-	
+
 	if (this.owner.rowManager.selected) { return; } /* do not process keypresses if a row is selected */
 
 	if (!this.selection.length) { return; } /* nothing if selection is active */
