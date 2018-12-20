@@ -10,7 +10,7 @@ SQL.Table = function(owner, name, x, y, z) {
 	this.selected = false;
 	SQL.Visual.apply(this);
 	this.data.comment = "";
-	
+
 	this.setTitle(name);
 	this.x = x || 0;
 	this.y = y || 0;
@@ -32,7 +32,7 @@ SQL.Table.prototype._build = function() {
 		[thead, tr],
 		[tr, this.dom.title]
 	);
-	
+
 	this.dom.mini = OZ.DOM.elm("div", {className:"mini"});
 	this.owner.map.dom.container.appendChild(this.dom.mini);
 
@@ -83,7 +83,7 @@ SQL.Table.prototype.click = function(e) {
 	OZ.Event.stop(e);
 	var t = OZ.Event.target(e);
 	this.owner.tableManager.select(this);
-	
+
 	if (t != this.dom.title) { return; } /* click on row */
 
 	SQL.publish("tableclick", this);
@@ -95,18 +95,35 @@ SQL.Table.prototype.dblclick = function(e) {
 	if (t == this.dom.title) { this.owner.tableManager.edit(); }
 }
 
-SQL.Table.prototype.select = function() { 
+SQL.Table.prototype.select = function(_isSibling) {
 	if (this.selected) { return; }
 	this.selected = true;
-	OZ.DOM.addClass(this.dom.container, "selected");
+	if (_isSibling) {
+		if (this.dom.container.className.indexOf('selected') == -1) {
+			OZ.DOM.addClass(this.dom.container, "sub-selected");
+		}
+	} else {
+		OZ.DOM.addClass(this.dom.container, "selected");
+	}
 	OZ.DOM.addClass(this.dom.mini, "mini_selected");
 	this.redraw();
+	if (_isSibling !== true) {
+		this.rows.forEach(function(row) {
+			if (row.relations && row.relations.length > 0) {
+				row.relations.forEach(function(relation) {
+					relation.row1.owner.select(true)
+					relation.row2.owner.select(true)
+				});
+			}
+		});
+	}
 }
 
-SQL.Table.prototype.deselect = function() { 
+SQL.Table.prototype.deselect = function() {
 	if (!this.selected) { return; }
 	this.selected = false;
 	OZ.DOM.removeClass(this.dom.container, "selected");
+	OZ.DOM.removeClass(this.dom.container, "sub-selected");
 	OZ.DOM.removeClass(this.dom.mini, "mini_selected");
 	this.redraw();
 }
@@ -121,7 +138,7 @@ SQL.Table.prototype.addRow = function(title, data) {
 
 SQL.Table.prototype.removeRow = function(r) {
 	var idx = this.rows.indexOf(r);
-	if (idx == -1) { return; } 
+	if (idx == -1) { return; }
 	r.destroy();
 	this.rows.splice(idx,1);
 	this.redraw();
@@ -146,15 +163,15 @@ SQL.Table.prototype.redraw = function() {
 	if (this.selected) { x--; y--; }
 	this.dom.container.style.left = x+"px";
 	this.dom.container.style.top = y+"px";
-	
+
 	var ratioX = this.owner.map.width / this.owner.width;
 	var ratioY = this.owner.map.height / this.owner.height;
-	
+
 	var w = this.dom.container.offsetWidth * ratioX;
 	var h = this.dom.container.offsetHeight * ratioY;
 	var x = this.x * ratioX;
 	var y = this.y * ratioY;
-	
+
 	this.dom.mini.style.width = Math.round(w)+"px";
 	this.dom.mini.style.height = Math.round(h)+"px";
 	this.dom.mini.style.left = Math.round(x)+"px";
@@ -162,7 +179,7 @@ SQL.Table.prototype.redraw = function() {
 
 	this.width = this.dom.container.offsetWidth;
 	this.height = this.dom.container.offsetHeight;
-	
+
 	var rs = this.getRelations();
 	for (var i=0;i<rs.length;i++) { rs[i].redraw(); }
 }
@@ -170,7 +187,7 @@ SQL.Table.prototype.redraw = function() {
 SQL.Table.prototype.moveBy = function(dx, dy) {
 	this.x += dx;
 	this.y += dy;
-	
+
 	this.snap();
 	this.redraw();
 }
@@ -195,7 +212,7 @@ SQL.Table.prototype.down = function(e) { /* mousedown - start drag */
 	OZ.Event.stop(e);
 	var t = OZ.Event.target(e);
 	if (t != this.dom.title) { return; } /* on a row */
-	
+
 	/* touch? */
 	if (e.type == "touchstart") {
 		var event = e.touches[0];
@@ -206,7 +223,7 @@ SQL.Table.prototype.down = function(e) { /* mousedown - start drag */
 		var moveEvent = "mousemove";
 		var upEvent = "mouseup";
 	}
-	
+
 	/* a non-shift click within a selection preserves the selection */
 	if (e.shiftKey || ! this.selected) {
 		this.owner.tableManager.select(this, e.shiftKey);
@@ -218,17 +235,17 @@ SQL.Table.prototype.down = function(e) { /* mousedown - start drag */
 	t.x = new Array(n);
 	t.y = new Array(n);
 	for (var i=0;i<n;i++) {
-		/* position relative to mouse cursor */ 
+		/* position relative to mouse cursor */
 		t.x[i] = t.active[i].x - event.clientX;
 		t.y[i] = t.active[i].y - event.clientY;
 	}
-	
-	if (this.owner.getOption("hide")) { 
+
+	if (this.owner.getOption("hide")) {
 		for (var i=0;i<n;i++) {
 			t.active[i].hideRelations();
 		}
 	}
-	
+
 	this.documentMove = OZ.Event.add(document, moveEvent, this.move.bind(this));
 	this.documentUp = OZ.Event.add(document, upEvent, this.up.bind(this));
 }
@@ -244,8 +261,8 @@ SQL.Table.prototype.toXML = function() {
 		xml += this.keys[i].toXML();
 	}
 	var c = this.getComment();
-	if (c) { 
-		xml += "<comment>"+SQL.escape(c)+"</comment>\n"; 
+	if (c) {
+		xml += "<comment>"+SQL.escape(c)+"</comment>\n";
 	}
 	xml += "</table>\n";
 	return xml;
@@ -324,9 +341,9 @@ SQL.Table.prototype.move = function(e) { /* mousemove */
 SQL.Table.prototype.up = function(e) {
 	var t = SQL.Table;
 	var d = SQL.Designer;
-	if (d.getOption("hide")) { 
+	if (d.getOption("hide")) {
 		for (var i=0;i<t.active.length;i++) {
-			t.active[i].showRelations(); 
+			t.active[i].showRelations();
 			t.active[i].redraw();
 		}
 	}
