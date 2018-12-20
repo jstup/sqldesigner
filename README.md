@@ -23,6 +23,8 @@ If you wish to support this project, <a href='https://www.paypal.com/cgi-bin/web
 
 # News
 
+## Added highlights to selecting table and it's 1st level relations
+
 ## Moved to GitHub
 
 Google Code is closing down, we are now completely migrated to GitHub.
